@@ -32,6 +32,8 @@ public class TwitterProducer {
     private static final String BOOTSTRAP_SERVER = "127.0.0.1:9092";
     private static final String TOPIC_NAME = "twitter_tweets";
 
+   private static final List<String> TERMS = List.of("kafka", "api", "java");
+
     public static void main(String[] args) {
         new TwitterProducer().run();
     }
@@ -46,18 +48,24 @@ public class TwitterProducer {
 
         KafkaProducer<String, String> kafkaProducer = createKafkaProducer();
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("Stopping application...");
+            client.stop();
+            kafkaProducer.close();
+            log.info("stopping client and producer!");
+        }));
+
         while (!client.isDone()) {
             String msg = null;
             try {
                 msg = msgQueue.poll(5, TimeUnit.SECONDS);
-                docker
             } catch (InterruptedException e) {
                 log.error("Error during poll", e);
                 client.stop();
             }
             if (msg != null) {
                 log.info("message: {}", msg);
-                kafkaProducer.send(new ProducerRecord<>(TOPIC_NAME, null, msg), (metadata, e) -> {
+                kafkaProducer.send(new ProducerRecord<>(TOPIC_NAME, 3, null, msg), (metadata, e) -> {
                     if (null != e) {
                         log.error("Smth wrong happened: ", e);
                     }
@@ -70,8 +78,8 @@ public class TwitterProducer {
     public Client createTwitterClient(BlockingQueue<String> msgQueue) {
         Hosts hosebirdHosts = new HttpHosts(Constants.STREAM_HOST);
         StatusesFilterEndpoint hosebirdEndpoint = new StatusesFilterEndpoint();
-        List<String> terms = List.of("kafka", "api", "java");
-        hosebirdEndpoint.trackTerms(terms);
+
+        hosebirdEndpoint.trackTerms(TERMS);
 
         Authentication hosebirdAuth = new OAuth1(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
 
@@ -90,6 +98,13 @@ public class TwitterProducer {
         properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
         properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+
+        properties.setProperty(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+        properties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
+        properties.setProperty(ProducerConfig.RETRIES_CONFIG, Integer.toString(Integer.MAX_VALUE));
+        properties.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
+
+        // default value of producer timeout is: [delivery.timeout.ms = 120000]
 
         return new KafkaProducer<>(properties);
     }
