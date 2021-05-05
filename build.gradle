@@ -19,10 +19,7 @@ subprojects {
     }
 
     dependencies {
-
-        implementation 'org.apache.kafka:kafka-clients:2.7.0'
-        implementation 'com.twitter:hbc-core:2.2.0'
-        implementation 'ch.qos.logback:logback-classic:1.2.3'
+        implementation 'org.slf4j:slf4j-simple:1.7.30'
 
         compileOnly 'org.projectlombok:lombok:1.18.18'
         annotationProcessor 'org.projectlombok:lombok:1.18.18'
@@ -35,7 +32,3 @@ subprojects {
 test {
     useJUnitPlatform()
 }
-
-//project("kafka-basics") {
-//
-//}
