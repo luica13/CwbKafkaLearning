@@ -1,4 +1,4 @@
-package com.webbfontain.kafka.tutorial1;
+package com.webbfontaine.kafka.twitter;
 
 import java.util.List;
 import java.util.Properties;
@@ -105,6 +105,11 @@ public class TwitterProducer {
         properties.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
 
         // default value of producer timeout is: [delivery.timeout.ms = 120000]
+
+        //high throughput producer
+        properties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+        properties.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20");
+        properties.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32 * 1024)); //32 KB
 
         return new KafkaProducer<>(properties);
     }

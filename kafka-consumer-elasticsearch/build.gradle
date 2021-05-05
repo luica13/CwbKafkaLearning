@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+group 'com.webbfontaine.elasticsearch'
+version '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '7.12.1'
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.30'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}

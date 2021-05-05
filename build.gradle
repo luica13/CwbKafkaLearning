@@ -9,19 +9,33 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
 
-    implementation 'org.apache.kafka:kafka-clients:2.7.0'
-    implementation 'com.twitter:hbc-core:2.2.0'
-    implementation 'ch.qos.logback:logback-classic:1.2.3'
+subprojects {
 
-    compileOnly 'org.projectlombok:lombok:1.18.18'
-    annotationProcessor'org.projectlombok:lombok:1.18.18'
+    apply plugin: "java"
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:1.7.0'
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+
+        implementation 'org.apache.kafka:kafka-clients:2.7.0'
+        implementation 'com.twitter:hbc-core:2.2.0'
+        implementation 'ch.qos.logback:logback-classic:1.2.3'
+
+        compileOnly 'org.projectlombok:lombok:1.18.18'
+        annotationProcessor 'org.projectlombok:lombok:1.18.18'
+
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:1.7.0'
+    }
 }
 
 test {
     useJUnitPlatform()
 }
+
+//project("kafka-basics") {
+//
+//}
