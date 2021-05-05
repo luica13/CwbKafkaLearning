@@ -18,33 +18,36 @@ import org.elasticsearch.common.xcontent.XContentType;
 
 @Slf4j
 public class ElasticSearchConsumer {
+    // Full access "https://pazuq4mwys:g2usvbxk77@kafka-learning-9321846693.eu-central-1.bonsaisearch.net:443"
+    private static final String HOSTNAME = "kafka-learning-9321846693.eu-central-1.bonsaisearch.net";
+    private static final String USERNAME = "pazuq4mwys";
+    private static final String PASSWORD = "g2usvbxk77";
+    private static final int PORT = 443;
+    private static final String SCHEMA = "https";
+    private static final String INDEX = "twitter";
+    private static final String JSON_DATA = """
+        {
+            "foo": "bar"
+        }
+        """;
 
     public static void main(String[] args) throws IOException {
         RestHighLevelClient client = createClient();
 
-        String json = "{ \"foo\": \"bla bla\" }";
-
-        IndexRequest indexRequest = new IndexRequest("twitter")
-            .source(json, XContentType.JSON);
+        IndexRequest indexRequest = new IndexRequest(INDEX).source(JSON_DATA, XContentType.JSON);
 
         IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
         String id = indexResponse.getId();
-
         log.info("Index id: {}", id);
 
         client.close();
     }
 
     private static RestHighLevelClient createClient() {
-        // Full access "https://pazuq4mwys:g2usvbxk77@kafka-learning-9321846693.eu-central-1.bonsaisearch.net:443"
-        String hostname = "kafka-learning-9321846693.eu-central-1.bonsaisearch.net";
-        String username = "pazuq4mwys";
-        String password = "g2usvbxk77";
-
         CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(USERNAME, PASSWORD));
 
-        RestClientBuilder builder = RestClient.builder(new HttpHost(hostname, 443, "https"))
+        RestClientBuilder builder = RestClient.builder(new HttpHost(HOSTNAME, PORT, SCHEMA))
             .setHttpClientConfigCallback(httpAsyncClientBuilder -> httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
 
         return new RestHighLevelClient(builder);
