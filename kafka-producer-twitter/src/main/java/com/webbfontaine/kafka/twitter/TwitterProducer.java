@@ -29,10 +29,10 @@ public class TwitterProducer {
     private static final String ACCESS_TOKEN = "2611730924-RNkNKJdfvNdTr9v7GiBC2TG9TbKlBdZuik9fxLR";
     private static final String ACCESS_TOKEN_SECRET = "TyT6qOpUukQhpq67unCLzFG8euZkG7mxpcNDHw8h2ohN2";
 
-    private static final String BOOTSTRAP_SERVER = "127.0.0.1:9092";
+    private static final String BOOTSTRAP_SERVER = "localhost:9092";
     private static final String TOPIC_NAME = "twitter_tweets";
 
-   private static final List<String> TERMS = List.of("kafka", "api", "java");
+   private static final List<String> TERMS = List.of("kafka", "api", "java", "Armenia", "Obama", "Putin");
 
     public static void main(String[] args) {
         new TwitterProducer().run();
@@ -99,17 +99,17 @@ public class TwitterProducer {
         properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
-        properties.setProperty(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
-        properties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
-        properties.setProperty(ProducerConfig.RETRIES_CONFIG, Integer.toString(Integer.MAX_VALUE));
-        properties.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
+//        properties.setProperty(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+//        properties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
+//        properties.setProperty(ProducerConfig.RETRIES_CONFIG, Integer.toString(Integer.MAX_VALUE));
+//        properties.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
 
         // default value of producer timeout is: [delivery.timeout.ms = 120000]
 
         //high throughput producer
-        properties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
-        properties.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20");
-        properties.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32 * 1024)); //32 KB
+//        properties.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+//        properties.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20");
+//        properties.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32 * 1024)); //32 KB
 
         return new KafkaProducer<>(properties);
     }

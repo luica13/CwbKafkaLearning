@@ -1,6 +1,9 @@
 package com.webbfontaine.elasticsearch;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
@@ -8,6 +11,10 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -15,6 +22,8 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
+
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 
 @Slf4j
 public class ElasticSearchConsumer {
@@ -25,22 +34,36 @@ public class ElasticSearchConsumer {
     private static final int PORT = 443;
     private static final String SCHEMA = "https";
     private static final String INDEX = "twitter";
-    private static final String JSON_DATA = """
-        {
-            "foo": "bar"
-        }
-        """;
 
     public static void main(String[] args) throws IOException {
         RestHighLevelClient client = createClient();
 
-        IndexRequest indexRequest = new IndexRequest(INDEX).source(JSON_DATA, XContentType.JSON);
+        String topic = "twitter_tweets";
 
-        IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
-        String id = indexResponse.getId();
-        log.info("Index id: {}", id);
 
-        client.close();
+        KafkaConsumer<String, String> consumer = createConsumer(topic);
+
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                log.info("Key: " + record.key() + ", Value: " + record.value());
+                log.info("Partition: " + record.partition() + ", Offset: " + record.offset());
+                String jsonString = record.value();
+
+                IndexRequest indexRequest = new IndexRequest(INDEX).source(jsonString, XContentType.JSON);
+                IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
+                String id = indexResponse.getId();
+                log.info("Index id: {}", id);
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+//        client.close();
     }
 
     private static RestHighLevelClient createClient() {
@@ -51,5 +74,22 @@ public class ElasticSearchConsumer {
             .setHttpClientConfigCallback(httpAsyncClientBuilder -> httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
 
         return new RestHighLevelClient(builder);
+    }
+
+    public static KafkaConsumer<String , String> createConsumer(String topic) {
+        String bootstrapServer = "127.0.0.1:9092";
+        String groupId= "kafka-demo-elastic";
+
+        Properties properties = new Properties();
+        properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
+        properties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        properties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
+        consumer.subscribe(Collections.singletonList(topic));
+
+        return  consumer;
     }
 }
