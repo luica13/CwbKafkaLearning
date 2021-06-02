@@ -48,7 +48,7 @@ public class ElasticSearchConsumer {
             for (ConsumerRecord<String, String> record : records) {
                 //kafka 2 strategies
                 //generic ID
-//                String id = record.topic() + "_" + record.partition() + "_" + record.offset();
+                //String id = record.topic() + "_" + record.partition() + "_" + record.offset();
 
                 //tweeter feed specific id
                 String id = extractIdFromTweet(record.value());
@@ -60,7 +60,7 @@ public class ElasticSearchConsumer {
                 IndexRequest indexRequest = new IndexRequest(INDEX).id(id).source(jsonString, XContentType.JSON);
                 IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
                 String resultId = indexResponse.getId();
-                log.info("Index id: {}", resultId);
+                log.info("Index id: {}" + resultId);
 
                 try {
                     Thread.sleep(1000);
