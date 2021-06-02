@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
 
+import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -40,20 +41,26 @@ public class ElasticSearchConsumer {
 
         String topic = "twitter_tweets";
 
-
         KafkaConsumer<String, String> consumer = createConsumer(topic);
 
         while (true) {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
             for (ConsumerRecord<String, String> record : records) {
+                //kafka 2 strategies
+                //generic ID
+//                String id = record.topic() + "_" + record.partition() + "_" + record.offset();
+
+                //tweeter feed specific id
+                String id = extractIdFromTweet(record.value());
+
                 log.info("Key: " + record.key() + ", Value: " + record.value());
                 log.info("Partition: " + record.partition() + ", Offset: " + record.offset());
                 String jsonString = record.value();
 
-                IndexRequest indexRequest = new IndexRequest(INDEX).source(jsonString, XContentType.JSON);
+                IndexRequest indexRequest = new IndexRequest(INDEX).id(id).source(jsonString, XContentType.JSON);
                 IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
-                String id = indexResponse.getId();
-                log.info("Index id: {}", id);
+                String resultId = indexResponse.getId();
+                log.info("Index id: {}", resultId);
 
                 try {
                     Thread.sleep(1000);
@@ -66,6 +73,16 @@ public class ElasticSearchConsumer {
 //        client.close();
     }
 
+    private static JsonParser jsonParser = new JsonParser();
+
+    private static String extractIdFromTweet(String tweetJson) {
+        return jsonParser.parse(tweetJson)
+            .getAsJsonObject()
+            .get("id_str")
+            .getAsString();
+
+    }
+
     private static RestHighLevelClient createClient() {
         CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(USERNAME, PASSWORD));
@@ -76,9 +93,9 @@ public class ElasticSearchConsumer {
         return new RestHighLevelClient(builder);
     }
 
-    public static KafkaConsumer<String , String> createConsumer(String topic) {
+    public static KafkaConsumer<String, String> createConsumer(String topic) {
         String bootstrapServer = "127.0.0.1:9092";
-        String groupId= "kafka-demo-elastic";
+        String groupId = "kafka-demo-elastic";
 
         Properties properties = new Properties();
         properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
@@ -90,6 +107,6 @@ public class ElasticSearchConsumer {
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
         consumer.subscribe(Collections.singletonList(topic));
 
-        return  consumer;
+        return consumer;
     }
 }
