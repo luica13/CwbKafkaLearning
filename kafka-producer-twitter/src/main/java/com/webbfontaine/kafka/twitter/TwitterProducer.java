@@ -32,7 +32,19 @@ public class TwitterProducer {
     private static final String BOOTSTRAP_SERVER = "localhost:9092";
     private static final String TOPIC_NAME = "twitter_tweets";
 
-   private static final List<String> TERMS = List.of("kafka", "api", "java", "Armenia", "Obama", "Putin");
+    private static final List<String> TERMS = List.of(
+        "kafka",
+        "api",
+        "java",
+        "Armenia",
+        "Obama",
+        "Putin",
+        "blockchain",
+        "Russia",
+        "covid",
+        "sputnik",
+        "tesla",
+        "biden");
 
     public static void main(String[] args) {
         new TwitterProducer().run();
