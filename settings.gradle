@@ -2,4 +2,5 @@ rootProject.name = 'CwbKafkaLearning'
 
 include 'kafka-producer-twitter'
 include 'kafka-consumer-elasticsearch'
+include 'kafka-connect'
 
